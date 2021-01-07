@@ -53,7 +53,7 @@
             android:value="2.1" />
 
         <activity
-            android:name=".BMapApiDemoMain"
+            android:name=".BMapApiMain"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="BaiduMapSDKDemo"
             android:screenOrientation="portrait">
@@ -75,42 +75,32 @@
             android:label="@string/demo_title_createmaplist"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".createmap.CustomMapDemo"
+            android:name=".createmap.CustomMap"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_custom"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".createmap.MapTypeDemo"
+            android:name=".createmap.MapType"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_map_type"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".createmap.TextureMapViewDemo"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:label="@string/demo_name_texturemapview"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".createmap.IndoorMapDemo"
+            android:name=".createmap.IndoorMap"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_indoor"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".createmap.OfflineDemo"
+            android:name=".createmap.Offline"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_offline"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".createmap.MapFragmentDemo"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:label="@string/demo_name_map_fragment"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".createmap.MultiMapViewDemo"
+            android:name=".createmap.MultiMapView"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_multimap"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".geometry.TrackShowDemo"
+            android:name=".geometry.TrackShow"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_track_show"
             android:screenOrientation="portrait" />
@@ -120,57 +110,57 @@
             android:label="@string/demo_title_drawlist"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".geometry.HeatMapDemo"
+            android:name=".geometry.HeatMap"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_heatmap"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".geometry.MarkerDemo"
+            android:name=".geometry.Marker"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_marker"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".geometry.PolylineDemo"
+            android:name=".geometry.Polyline"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_polyline"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".geometry.MarkerAnimationDemo"
+            android:name=".geometry.MarkerAnimation"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_marker_animation"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".geometry.PolygonDemo"
+            android:name=".geometry.Polygon"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_polygon"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".geometry.OpenglDemo"
+            android:name=".geometry.Opengl"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_opengl"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".geometry.TileOverlayDemo"
+            android:name=".geometry.TileOverlay"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_tileoverlay"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".geometry.MarkerClusterDemo"
+            android:name=".geometry.MarkerCluster"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_marker_cluster_demo"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".geometry.CircleDemo"
+            android:name=".geometry.Circle"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_circle"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".geometry.ArcDemo"
+            android:name=".geometry.Arc"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_arc"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".geometry.GroundOverlayDemo"
+            android:name=".geometry.GroundOverlay"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_groundoverlay"
             android:screenOrientation="portrait" />
@@ -180,17 +170,17 @@
             android:label="@string/demo_title_layerlist"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".layers.LayerTrafficAndHeatMapDemo"
+            android:name=".layers.LayerTrafficAndHeatMap"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_layertraffic"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".layers.LayerBuildingDemo"
+            android:name=".layers.LayerBuilding"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_layerbuilding"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".layers.LocationCustomDemo"
+            android:name=".layers.LocationCustom"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_locationcustom"
             android:screenOrientation="portrait" />
@@ -286,27 +276,27 @@
             android:label="@string/demo_name_snapshot"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".searchroute.DrivingRouteSearchDemo"
+            android:name=".searchroute.DrivingRouteSearch"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_driving_route"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".searchroute.WalkingRouteSearchDemo"
+            android:name=".searchroute.WalkingRouteSearch"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_walking_route"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".searchroute.BikingRouteSearchDemo"
+            android:name=".searchroute.BikingRouteSearch"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_biking_route"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".searchroute.TransitRoutePlanDemo"
+            android:name=".searchroute.TransitRoutePlan"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_transit_route"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".searchroute.MassTransitRouteDemo"
+            android:name=".searchroute.MassTransitRoute"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_mass_transit_route"
             android:screenOrientation="portrait" />
@@ -316,12 +306,12 @@
             android:label="@string/demo_title_routeplan"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".searchroute.IndoorRouteDemo"
+            android:name=".searchroute.IndoorRoute"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_route"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".searchroute.BusLineSearchDemo"
+            android:name=".searchroute.BusLineSearch"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_bus"
             android:screenOrientation="portrait" />
