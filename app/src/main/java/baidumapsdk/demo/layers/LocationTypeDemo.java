@@ -65,8 +65,9 @@ public class LocationTypeDemo extends AppCompatActivity implements SensorEventLi
         initLocation();
     }
 
+    //传感器接口如下
     @Override
-    public void onSensorChanged(SensorEvent sensorEvent) {
+    public void onSensorChanged(SensorEvent sensorEvent) {  //传感器的值发生变化
         double x = sensorEvent.values[SensorManager.DATA_X];
         if (Math.abs(x - lastX) > 1.0) {
             mCurrentDirection = (int) x;
@@ -82,7 +83,7 @@ public class LocationTypeDemo extends AppCompatActivity implements SensorEventLi
     }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {
+    public void onAccuracyChanged(Sensor sensor, int i) {  //传感器的精度发生变化
 
     }
 

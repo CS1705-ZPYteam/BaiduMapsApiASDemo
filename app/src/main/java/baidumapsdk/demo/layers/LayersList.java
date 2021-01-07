@@ -37,6 +37,5 @@ public class LayersList extends AppCompatActivity {
             new DemoInfo(R.string.demo_title_layertraffic, R.string.demo_desc_layertraffic, LayerTrafficAndHeatMap.class),
             new DemoInfo(R.string.demo_title_layerbuilding, R.string.demo_desc_layerbuilding, LayerBuilding.class),
             new DemoInfo(R.string.demo_title_locationtype, R.string.demo_desc_locationtype, LocationTypeDemo.class),
-            new DemoInfo(R.string.demo_title_locationcustom, R.string.demo_desc_locationcustom, LocationCustom.class)
     };
 }
