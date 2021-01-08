@@ -1,10 +1,17 @@
 package baidumapsdk.demo.createmap;
 
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.RadioButton;
+import android.widget.RadioGroup;
 
 import com.baidu.location.BDAbstractLocationListener;
 import com.baidu.location.BDLocation;
@@ -16,6 +23,7 @@ import com.baidu.mapapi.map.MapStatus;
 import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
+import com.baidu.mapapi.map.MyLocationConfiguration;
 import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.model.LatLng;
 
@@ -24,33 +32,48 @@ import baidumapsdk.demo.R;
 /**
  * 基础地图类型
  */
-public class MapType extends AppCompatActivity {
+public class MapType extends AppCompatActivity implements SensorEventListener {
 
     // MapView 是地图主控件
     private MapView mMapView;
     private BaiduMap mBaiduMap;
-    private boolean isFirstLocate=true;
-    private LocationClient locationClient=null;
-    private MyLocationListener myListener=new MyLocationListener();
+    private boolean isFirstLocate = true;
+    private LocationClient locationClient = null;
+    private MyLocationListener myListener = new MyLocationListener();
+    private CheckBox heat_map;
+    private CheckBox road_map;
+    private MyLocationConfiguration.LocationMode mCurrentMode;
+    private Double lastX = 0.0;
+    private Integer mCurrentDirection=0;
+    private float radius;
+    private double longitude;
+    private double latitude;
+    private SensorManager mSensorManager;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         SDKInitializer.initialize(getApplicationContext());
         setContentView(R.layout.activity_map_type);
-        locationClient=new LocationClient(getApplicationContext());
+        locationClient = new LocationClient(getApplicationContext());
         locationClient.registerLocationListener(new MyLocationListener());
 
         mMapView = findViewById(R.id.bmapView);
         mBaiduMap = mMapView.getMap();
 
         mBaiduMap.setMyLocationEnabled(true);
+        //获取传感器服务
+        mSensorManager=(SensorManager)getSystemService(SENSOR_SERVICE);
+        mCurrentMode=MyLocationConfiguration.LocationMode.NORMAL;
+        mSensorManager.registerListener(this,mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),SensorManager.SENSOR_DELAY_UI);
+
         requestLocation();
         //若无法获得位置，默认天安门为初始位置
-        double latitude=39.915071,longitude=116.403907;
-        if(mBaiduMap.getLocationData()!=null){
-            latitude=mBaiduMap.getLocationData().latitude;
-            longitude=mBaiduMap.getLocationData().longitude;
+        double latitude = 39.915071, longitude = 116.403907;
+        if (mBaiduMap.getLocationData() != null) {
+            latitude = mBaiduMap.getLocationData().latitude;
+            longitude = mBaiduMap.getLocationData().longitude;
         }
 
         // 构建地图状态
@@ -72,6 +95,21 @@ public class MapType extends AppCompatActivity {
 
         // 设置地图状态
         mBaiduMap.setMapStatus(mapStatusUpdate);
+        heat_map = this.findViewById(R.id.heat_map);
+        road_map = this.findViewById(R.id.road_map);
+        heat_map.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                mBaiduMap.setBaiduHeatMapEnabled(b);
+            }
+        });
+        road_map.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                mBaiduMap.setTrafficEnabled(b);
+            }
+        });
+
     }
 
     /**
@@ -103,20 +141,22 @@ public class MapType extends AppCompatActivity {
         }
     }
 
+
     /**
      * 开启室内图
      */
-    public void openIndoorView(View view){
-        Intent intent=new Intent(MapType.this, IndoorMap.class);
-        intent.putExtra("latitude",mBaiduMap.getLocationData().latitude);
-        intent.putExtra("longitude",mBaiduMap.getLocationData().longitude);
+    public void openIndoorView(View view) {
+        Intent intent = new Intent(MapType.this, IndoorMap.class);
+        intent.putExtra("latitude", mBaiduMap.getLocationData().latitude);
+        intent.putExtra("longitude", mBaiduMap.getLocationData().longitude);
         this.startActivity(intent);
     }
+
     /**
      * 清除地图缓存数据，支持清除普通地图和卫星图缓存，再次进入地图页面生效。
      */
     public void cleanMapCache(View view) {
-        if (mBaiduMap == null){
+        if (mBaiduMap == null) {
             return;
         }
         int mapType = mBaiduMap.getMapType();
@@ -152,16 +192,25 @@ public class MapType extends AppCompatActivity {
         locationClient.stop();
     }
 
-    private void requestLocation(){
+    private void requestLocation() {
+
         initLocationOption();
+
+        mCurrentMode=MyLocationConfiguration.LocationMode.FOLLOWING;
+//        mCurrentMode = MyLocationConfiguration.LocationMode.NORMAL;
+        mBaiduMap.setMyLocationConfiguration(new MyLocationConfiguration(mCurrentMode, true, null));
+        MapStatus.Builder builder = new MapStatus.Builder();
+        builder.overlook(0);
+        mBaiduMap.animateMapStatus(MapStatusUpdateFactory.newMapStatus(builder.build()));
         locationClient.start();
     }
+
     /**
      * 初始化定位参数配置
      */
     private void initLocationOption() {
-        LocationClientOption locationClientOption=new LocationClientOption();
-        MyLocationListener myLocationListener=new MyLocationListener();
+        LocationClientOption locationClientOption = new LocationClientOption();
+        MyLocationListener myLocationListener = new MyLocationListener();
         //注册监听函数
         locationClient.registerLocationListener(myLocationListener);
         locationClientOption.setLocationMode(LocationClientOption.LocationMode.Hight_Accuracy);
@@ -192,7 +241,7 @@ public class MapType extends AppCompatActivity {
 //设置打开自动回调位置模式，该开关打开后，期间只要定位SDK检测到位置变化就会主动回调给开发者，该模式下开发者无需再关心定位间隔是多少，定位SDK本身发现位置变化就会及时回调给开发者
         locationClientOption.setOpenAutoNotifyMode();
 //设置打开自动回调位置模式，该开关打开后，期间只要定位SDK检测到位置变化就会主动回调给开发者
-        locationClientOption.setOpenAutoNotifyMode(3000,1, LocationClientOption.LOC_SENSITIVITY_HIGHT);
+        locationClientOption.setOpenAutoNotifyMode(3000, 1, LocationClientOption.LOC_SENSITIVITY_HIGHT);
 //需将配置好的LocationClientOption对象，通过setLocOption方法传递给LocationClient对象使用
         locationClient.setLocOption(locationClientOption);
         locationClientOption.setWifiCacheTimeOut(5 * 60 * 1000);
@@ -200,19 +249,42 @@ public class MapType extends AppCompatActivity {
         //如果设置了该接口，首次启动定位时，会先判断当前Wi-Fi是否超出有效期，若超出有效期，会先重新扫描Wi-Fi，然后定位
 //开始定位
     }
-    public class MyLocationListener extends BDAbstractLocationListener{
+
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        double x = sensorEvent.values[SensorManager.DATA_X];
+        if (Math.abs(x - lastX)>1.0){
+            mCurrentDirection=(int)x;
+            MyLocationData myLocationData=new MyLocationData.Builder()
+                    .accuracy(radius)
+                    .direction(mCurrentDirection)
+                    .latitude(latitude)
+                    .longitude(longitude)
+                    .build();
+            mBaiduMap.setMyLocationData(myLocationData);
+        }
+        lastX=x;
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+
+    }
+
+    public class MyLocationListener extends BDAbstractLocationListener {
         @Override
         public void onReceiveLocation(BDLocation location) {
-            double latitude=location.getLatitude();
-            double longitude=location.getLongitude();
-            float radius=location.getRadius();
-            String coorType=location.getCoorType();
+            latitude = location.getLatitude();
+            longitude = location.getLongitude();
+            radius = location.getRadius();
+            String coorType = location.getCoorType();
             int errorCode = location.getLocType();
             navigateTo(location);
         }
     }
-    private void navigateTo(BDLocation location){
-        if(isFirstLocate) {
+
+    private void navigateTo(BDLocation location) {
+        if (isFirstLocate) {
             LatLng ll = new LatLng(location.getLatitude(), location.getLongitude());
             MapStatusUpdate update = MapStatusUpdateFactory.newLatLng(ll);
             mBaiduMap.animateMapStatus(update);
