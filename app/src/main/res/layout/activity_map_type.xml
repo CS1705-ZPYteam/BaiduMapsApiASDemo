@@ -65,6 +65,40 @@
             android:textColor="@color/white" />
     </RadioGroup>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/dkgray"
+        android:gravity="center_horizontal"
+        android:paddingRight="10dp"
+    >
+           <CheckBox
+               android:id="@+id/heat_map"
+               android:layout_width="match_parent"
+               android:layout_height="wrap_content"
+               android:text="热力图"
+               android:textSize="14sp"
+               android:layout_weight="1"
+               android:padding="2dp"
+               android:textStyle="bold"
+               android:textColor="@color/white"
+               />
+           <CheckBox
+               android:id="@+id/road_map"
+               android:layout_width="match_parent"
+               android:layout_height="wrap_content"
+               android:text="路况图"
+               android:textStyle="bold"
+               android:textSize="14sp"
+               android:layout_weight="1"
+               android:textColor="@color/white"
+               android:padding="2dp"
+               />
+
+
+    </LinearLayout>
+
     <com.baidu.mapapi.map.MapView
         android:id="@+id/bmapView"
         android:layout_width="match_parent"

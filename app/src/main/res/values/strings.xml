@@ -137,7 +137,7 @@
 
     <string name="demo_title_createmaplist">创建地图</string>
     <string name="demo_name_custom">个性化地图</string>
-    <string name="demo_desc_createmaplist">基础地图、个性化地图、3D图、路况图、离线地图、室内地图以及多地图创建</string>
+    <string name="demo_desc_createmaplist">基础地图、个性化地图、路况图、离线地图、室内地图以及多地图创建</string>
     <string name="demo_title_custommap">个性化地图--CustomMapDemo</string>
     <string name="demo_desc_custommap">介绍个性化地图的创建和使用</string>
     <string name="demo_name_map_type">基础地图类型</string>
@@ -168,7 +168,7 @@
     <string name="demo_title_mapclick">事件交互(点击)--MapClickDemo</string>
     <string name="demo_desc_mapclick">对地图单击、长按、双击的事件响应</string>
     <string name="demo_title_map_type">地图类型--MapTypeDemo</string>
-    <string name="demo_desc_map_type">普通地图、空白地图、卫星地图、室内图、3D楼宇图、热力图展示展示</string>
+    <string name="demo_desc_map_type">普通地图、空白地图、卫星地图、室内图、热力图、路况图展示展示</string>
     <string name="demo_title_multimapview">多地图展示--MultiMapViewDemo</string>
     <string name="demo_desc_multimapview">在一个Activity中创建多个地图展示</string>
     <string name="demo_name_logosetting">控件设置</string>
@@ -236,5 +236,7 @@
     <string name="title_activity_texture_map_view_demo">TextureMapViewDemo</string>
     <string name="title_activity_poi_near_by_search_demo">PoiNearBySearchDemo</string>
     <string name="instruction">当设计的UI与地图部分重叠时，设置地图的padding值,以防止UI遮挡</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

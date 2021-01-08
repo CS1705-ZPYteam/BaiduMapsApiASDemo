@@ -15,6 +15,7 @@ import android.widget.RadioGroup;
 import com.baidu.mapapi.map.BaiduMapOptions;
 import com.baidu.mapapi.map.MapStatus;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
+import com.baidu.mapapi.map.MapCustomStyleOptions;
 import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.model.LatLng;
 
@@ -33,15 +34,18 @@ public class CustomMap extends AppCompatActivity {
 
     // 地图View布局
     private FrameLayout mFrameLayout;
-
     // 个性化地图开关标识
     private static final int OPEN_ID_GRAY = 0;
     private static final int OPEN_ID_WHITE = 1;
-    private static final int CLOSE_ID = 2;
+    private static final int OPEN_ID_DAY = 2;
+    private static final int OPEN_ID_NIGHT = 3;
+    private static final int CLOSE_ID = 4;
 
     // 用于设置个性化地图的样式文件
     private static final String CUSTOM_FILE_NAME_GRAY = "custom_map_config_gray.json";
     private static final String CUSTOM_FILE_NAME_WHITE = "custom_map_config_white.json";
+    private static final String CUSTOM_FILE_NAME_NIGHT = "custom_blacknight.sty";
+    private static final String CUSTOM_FILE_NAME_DAY = "custom_trip.sty";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -50,7 +54,6 @@ public class CustomMap extends AppCompatActivity {
         mMapView = new MapView(this, new BaiduMapOptions());
         initView(this);
         setContentView(mFrameLayout);
-
         // 构建地图状态
         MapStatus.Builder builder = new MapStatus.Builder();
         // 中心点设置为颐和园
@@ -75,7 +78,6 @@ public class CustomMap extends AppCompatActivity {
     private void initView(Context context) {
         mFrameLayout = new FrameLayout(this);
         mFrameLayout.addView(mMapView);
-
         RadioGroup group = new RadioGroup(context);
         group.setBackgroundColor(Color.DKGRAY);
         // 个性化开关水平排列
@@ -83,26 +85,41 @@ public class CustomMap extends AppCompatActivity {
         group.setGravity(Gravity.CENTER_HORIZONTAL);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 
-        final RadioButton grayStyleButton = new RadioButton(context);
-        grayStyleButton.setText("开启样式1");
-        grayStyleButton.setId(OPEN_ID_GRAY);
-        grayStyleButton.setTextColor(Color.WHITE);
-        group.addView(grayStyleButton, params);
+//        final RadioButton grayStyleButton = new RadioButton(context);
+//        grayStyleButton.setText("灰色");
+//        grayStyleButton.setId(OPEN_ID_GRAY);
+//        grayStyleButton.setTextColor(Color.WHITE);
+//        group.addView(grayStyleButton, params);
+//
+//        final RadioButton whiteStyleButton = new RadioButton(context);
+//        whiteStyleButton.setText("白色");
+//        whiteStyleButton.setTextColor(Color.WHITE);
+//        whiteStyleButton.setId(OPEN_ID_WHITE);
+//        group.addView(whiteStyleButton, params);
 
-        final RadioButton whiteStyleButton = new RadioButton(context);
-        whiteStyleButton.setText("开启样式2");
-        whiteStyleButton.setTextColor(Color.WHITE);
-        whiteStyleButton.setId(OPEN_ID_WHITE);
-        group.addView(whiteStyleButton, params);
+        final RadioButton dayStyleButton = new RadioButton(context);
+        dayStyleButton.setText("白日");
+        dayStyleButton.setPadding(0,0,5,0);
+        dayStyleButton.setTextColor(Color.GREEN);
+        dayStyleButton.setId(OPEN_ID_DAY);
+        group.addView(dayStyleButton, params);
+
+        final RadioButton nightStyleButton = new RadioButton(context);
+        nightStyleButton.setText("黑夜");
+        nightStyleButton.setPadding(5,0,5,0);
+        nightStyleButton.setTextColor(Color.YELLOW);
+        nightStyleButton.setId(OPEN_ID_NIGHT);
+        group.addView(nightStyleButton, params);
 
         final RadioButton closeStyleButton = new RadioButton(context);
         closeStyleButton.setText("关闭个性化");
+        closeStyleButton.setPadding(5,0,0,0);
         closeStyleButton.setTextColor(Color.WHITE);
         closeStyleButton.setId(CLOSE_ID);
         group.addView(closeStyleButton, params);
 
         // 默认打开个性化地图样式，开关选择打开
-        grayStyleButton.setChecked(true);
+        dayStyleButton.setChecked(true);
 
         group.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -117,11 +134,22 @@ public class CustomMap extends AppCompatActivity {
                     String customStyleFilePath = getCustomStyleFilePath(CustomMap.this, CUSTOM_FILE_NAME_WHITE);
                     mMapView.setMapCustomStylePath(customStyleFilePath);
                     mMapView.setMapCustomStyleEnable(true);
-                } else if (checkedId == CLOSE_ID){
+                } else if (checkedId == OPEN_ID_DAY) {
+                        // 开启日景个性化样式
+                        String customStyleFilePath = getCustomStyleFilePath(CustomMap.this, CUSTOM_FILE_NAME_DAY);
+                        mMapView.setMapCustomStylePath(customStyleFilePath);
+                        mMapView.setMapCustomStyleEnable(true);
+                }
+                else if (checkedId == OPEN_ID_NIGHT) {
+                    // 开启夜景个性化样式
+                    String customStyleFilePath = getCustomStyleFilePath(CustomMap.this, CUSTOM_FILE_NAME_NIGHT);
+                    mMapView.setMapCustomStylePath(customStyleFilePath);
+                    mMapView.setMapCustomStyleEnable(true);
+                }else if (checkedId == CLOSE_ID){
                     // 关闭个性化样式
                     mMapView.setMapCustomStyleEnable(false);
                 } else {
-                    Log.e("CustomMapDemo", "Invalid check");
+                    Log.e("CustomMap", "Invalid check");
                 }
             }
         });
@@ -157,7 +185,7 @@ public class CustomMap extends AppCompatActivity {
         String parentPath = null;
 
         try {
-            inputStream = context.getAssets().open("customConfigdir/" + customStyleFileName);
+            inputStream = context.getAssets().open("customConfigdir/" +customStyleFileName);
             byte[] buffer = new byte[inputStream.available()];
             inputStream.read(buffer);
 
