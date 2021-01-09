@@ -140,7 +140,7 @@
     <string name="demo_desc_createmaplist">基础地图、个性化地图、路况图、离线地图、室内地图以及多地图创建</string>
     <string name="demo_title_custommap">个性化地图--CustomMapDemo</string>
     <string name="demo_desc_custommap">介绍个性化地图的创建和使用</string>
-    <string name="demo_name_map_type">基础地图类型</string>
+    <string name="demo_name_map_type">地图类型</string>
     <string name="demo_name_offline">离线地图</string>
     <string name="demo_title_offline">离线地图功能--OfflineDemo</string>
     <string name="demo_desc_offline">介绍如何下载和使用离线地图</string>

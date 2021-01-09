@@ -38,7 +38,6 @@ public class CreateMapList extends AppCompatActivity {
     private static final DemoInfo[] DEMOS = {
             new DemoInfo(R.string.demo_title_map_type, R.string.demo_desc_map_type, MapType.class),
             new DemoInfo(R.string.demo_title_custommap, R.string.demo_desc_custommap, CustomMap.class),
-            new DemoInfo(R.string.demo_title_layertraffic, R.string.demo_desc_layertraffic, LayerTrafficAndHeatMap.class),
             new DemoInfo(R.string.demo_title_indoor, R.string.demo_desc_indoor, IndoorMap.class),
             new DemoInfo(R.string.demo_title_multimapview, R.string.demo_desc_multimapview, MultiMapView.class),
             new DemoInfo(R.string.demo_title_offline, R.string.demo_desc_offline, Offline.class)

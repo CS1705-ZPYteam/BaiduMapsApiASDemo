@@ -83,6 +83,7 @@
             android:name=".createmap.MapType"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/demo_name_map_type"
+
             android:screenOrientation="portrait" />
         <activity
             android:name=".createmap.IndoorMap"
