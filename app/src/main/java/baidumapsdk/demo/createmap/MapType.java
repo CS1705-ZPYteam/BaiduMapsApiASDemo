@@ -6,15 +6,25 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.Display;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Toast;
 
 import com.baidu.location.BDAbstractLocationListener;
 import com.baidu.location.BDLocation;
@@ -22,6 +32,9 @@ import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.map.BaiduMap;
+import com.baidu.mapapi.map.BitmapDescriptor;
+import com.baidu.mapapi.map.BitmapDescriptorFactory;
+import com.baidu.mapapi.map.MapPoi;
 import com.baidu.mapapi.map.MapStatus;
 import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
@@ -47,16 +60,19 @@ public class MapType extends AppCompatActivity implements SensorEventListener {
     private CheckBox road_map;
     private MyLocationConfiguration.LocationMode mCurrentMode;
     private Double lastX = 0.0;
-    private Integer mCurrentDirection=0;
+    private Integer mCurrentDirection = 0;
     private float radius;
     private double longitude;
     private double latitude;
     private SensorManager mSensorManager;
-
+    private BDLocation mylocation;
+    private BitmapDescriptor mbitmap= BitmapDescriptorFactory.fromResource(R.drawable.icon_marka);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         SDKInitializer.initialize(getApplicationContext());
         setContentView(R.layout.activity_map_type);
         locationClient = new LocationClient(getApplicationContext());
@@ -67,9 +83,9 @@ public class MapType extends AppCompatActivity implements SensorEventListener {
 
         mBaiduMap.setMyLocationEnabled(true);
         //获取传感器服务
-        mSensorManager=(SensorManager)getSystemService(SENSOR_SERVICE);
-        mCurrentMode=MyLocationConfiguration.LocationMode.NORMAL;
-        mSensorManager.registerListener(this,mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),SensorManager.SENSOR_DELAY_UI);
+        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        mCurrentMode = MyLocationConfiguration.LocationMode.NORMAL;
+        mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), SensorManager.SENSOR_DELAY_UI);
 
         requestLocation();
         //若无法获得位置，默认天安门为初始位置
@@ -112,16 +128,63 @@ public class MapType extends AppCompatActivity implements SensorEventListener {
                 mBaiduMap.setTrafficEnabled(b);
             }
         });
+        initListenser();
 
     }
 
+    /**
+     * 对地图事件的消息响应
+     */
+    private void initListenser(){
+        mBaiduMap.setOnMapClickListener(new BaiduMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                AlertDialog.Builder builder=new AlertDialog.Builder(MapType.this);
+                builder.setIcon(R.drawable.map);
+                builder.setMessage("经度:"+latLng.longitude+",纬度:"+latLng.latitude);
+                builder.setPositiveButton("OK",null);
+                builder.show();
+            }
+
+            @Override
+            public void onMapPoiClick(MapPoi mapPoi) {
+                AlertDialog.Builder builder=new AlertDialog.Builder(MapType.this);
+                builder.setIcon(R.drawable.map);
+                builder.setMessage(mapPoi.getName());
+                builder.setPositiveButton("OK",null);
+                builder.show();
+            }
+        });
+    }
     public void go_current(View view) {
-        MapStatus.Builder builder=new MapStatus.Builder();
-        float zoom=18.0f;
-        LatLng center=new LatLng(mBaiduMap.getLocationData().latitude,mBaiduMap.getLocationData().longitude);
+        MapStatus.Builder builder = new MapStatus.Builder();
+        float zoom = 18.0f;
+        LatLng center = new LatLng(mBaiduMap.getLocationData().latitude, mBaiduMap.getLocationData().longitude);
         builder.target(center).zoom(zoom);
         MapStatusUpdate mapStatusUpdate = MapStatusUpdateFactory.newMapStatus(builder.build());
         mBaiduMap.animateMapStatus(mapStatusUpdate);
+        String message = new String();
+        String country = mylocation.getCountry();
+        String city = mylocation.getCity();
+        String province = mylocation.getProvince();
+        String district = mylocation.getDistrict();
+        String town = mylocation.getTown();
+        String street = mylocation.getStreet();
+        String address = mylocation.getAddrStr();
+        message ="当前位置\n"+ country + province + city + district + town + street + "\n" + address;
+
+        Toast toast = Toast.makeText(getApplicationContext(), message, 2);
+        toast.setGravity(Gravity.CENTER, 0, 0);
+
+        ImageView imageView = new ImageView(getApplicationContext());
+        imageView.setImageResource(R.drawable.gay);
+        imageView.setAdjustViewBounds(true);
+        imageView.setScaleType(ImageView.ScaleType.FIT_XY);
+
+        LinearLayout toastView = (LinearLayout) toast.getView();
+        toastView.setOrientation(LinearLayout.VERTICAL);
+        toastView.addView(imageView, 0);
+        toast.show();
     }
 
     /**
@@ -130,54 +193,27 @@ public class MapType extends AppCompatActivity implements SensorEventListener {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_map_choose,menu);
+        inflater.inflate(R.menu.menu_map_choose, menu);
         return true;
     }
+
     @Override
-    public boolean onOptionsItemSelected(MenuItem item){
-            int id=item.getItemId();
-            if ((id==R.id.ordinary)){
-                mBaiduMap.setMapType(BaiduMap.MAP_TYPE_NORMAL);
-                return true;
-            }
-            if(id==R.id.satalite){
-                mBaiduMap.setMapType(BaiduMap.MAP_TYPE_SATELLITE);
-                return true;
-            }
-            if(id==R.id.blank){
-                mBaiduMap.setMapType(BaiduMap.MAP_TYPE_NONE);
-                return true;
-            }
-            return super.onOptionsItemSelected(item);
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if ((id == R.id.ordinary)) {
+            mBaiduMap.setMapType(BaiduMap.MAP_TYPE_NORMAL);
+            return true;
+        }
+        if (id == R.id.satalite) {
+            mBaiduMap.setMapType(BaiduMap.MAP_TYPE_SATELLITE);
+            return true;
+        }
+        if (id == R.id.blank) {
+            mBaiduMap.setMapType(BaiduMap.MAP_TYPE_NONE);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
-    /**
-     * 设置底图显示模式
-     */
-//    public void setMapMode(View view) {
-//        boolean checked = ((RadioButton) view).isChecked();
-//        switch (view.getId()) {
-//            // 普通图
-//            case R.id.normal:
-//                if (checked) {
-//                    mBaiduMap.setMapType(BaiduMap.MAP_TYPE_NORMAL);
-//                }
-//                break;
-//            // 卫星图
-//            case R.id.statellite:
-//                if (checked) {
-//                    mBaiduMap.setMapType(BaiduMap.MAP_TYPE_SATELLITE);
-//                }
-//                break;
-//            // 空白地图
-//            case R.id.none:
-//                if (checked) {
-//                    mBaiduMap.setMapType(BaiduMap.MAP_TYPE_NONE);
-//                }
-//                break;
-//            default:
-//                break;
-//        }
-//    }
 
 
     /**
@@ -229,7 +265,6 @@ public class MapType extends AppCompatActivity implements SensorEventListener {
         mBaiduMap.setMyLocationEnabled(false);
         locationClient.stop();
     }
-
 
 
     private void requestLocation() {
@@ -293,9 +328,9 @@ public class MapType extends AppCompatActivity implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         double x = sensorEvent.values[SensorManager.DATA_X];
-        if (Math.abs(x - lastX)>1.0){
-            mCurrentDirection=(int)x;
-            MyLocationData myLocationData=new MyLocationData.Builder()
+        if (Math.abs(x - lastX) > 1.0) {
+            mCurrentDirection = (int) x;
+            MyLocationData myLocationData = new MyLocationData.Builder()
                     .accuracy(radius)
                     .direction(mCurrentDirection)
                     .latitude(latitude)
@@ -303,7 +338,7 @@ public class MapType extends AppCompatActivity implements SensorEventListener {
                     .build();
             mBaiduMap.setMyLocationData(myLocationData);
         }
-        lastX=x;
+        lastX = x;
     }
 
     @Override
@@ -339,5 +374,6 @@ public class MapType extends AppCompatActivity implements SensorEventListener {
         locationBuilder.latitude(location.getLatitude());
         MyLocationData locationData = locationBuilder.build();
         mBaiduMap.setMyLocationData(locationData);
+        mylocation = location;
     }
 }
