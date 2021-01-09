@@ -314,4 +314,7 @@ public class PoiCitySearchDemo extends AppCompatActivity implements OnGetPoiSear
         // 释放地图组件
         mMapView.onDestroy();
     }
+    public void mijj(){
+
+    }
 }
