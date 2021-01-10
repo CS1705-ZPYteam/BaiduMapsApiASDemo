@@ -8,6 +8,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SwitchCompat;
 import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
@@ -17,13 +18,17 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.AdapterView;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.RelativeLayout;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.baidu.location.BDAbstractLocationListener;
@@ -39,16 +44,28 @@ import com.baidu.mapapi.map.MapStatus;
 import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
+import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.MyLocationConfiguration;
 import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.model.LatLng;
+import com.baidu.mapapi.search.core.PoiInfo;
+import com.baidu.mapapi.search.core.SearchResult;
+import com.baidu.mapapi.search.geocode.GeoCodeResult;
+import com.baidu.mapapi.search.geocode.GeoCoder;
+import com.baidu.mapapi.search.geocode.OnGetGeoCoderResultListener;
+import com.baidu.mapapi.search.geocode.ReverseGeoCodeOption;
+import com.baidu.mapapi.search.geocode.ReverseGeoCodeResult;
+
+import java.util.List;
 
 import baidumapsdk.demo.R;
+import baidumapsdk.demo.search.PoiListAdapter;
+import baidumapsdk.demo.search.ReverseGeoCodeDemo;
 
 /**
  * 基础地图类型
  */
-public class MapType extends AppCompatActivity implements SensorEventListener {
+public class MapType extends AppCompatActivity implements SensorEventListener, OnGetGeoCoderResultListener,AdapterView.OnItemClickListener {
 
     // MapView 是地图主控件
     private MapView mMapView;
@@ -56,17 +73,18 @@ public class MapType extends AppCompatActivity implements SensorEventListener {
     private boolean isFirstLocate = true;
     private LocationClient locationClient = null;
     private MyLocationListener myListener = new MyLocationListener();
-    private CheckBox heat_map;
-    private CheckBox road_map;
     private MyLocationConfiguration.LocationMode mCurrentMode;
     private Double lastX = 0.0;
-    private Integer mCurrentDirection = 0;
     private float radius;
     private double longitude;
     private double latitude;
-    private SensorManager mSensorManager;
     private BDLocation mylocation;
-    private BitmapDescriptor mbitmap= BitmapDescriptorFactory.fromResource(R.drawable.icon_marka);
+
+    private GeoCoder mSearch=null;//搜索模块
+    private int mLoadIndex = 0;
+    private RelativeLayout mPoiInfo;
+    private ListView mPoiList;
+    private BitmapDescriptor mbitmap = BitmapDescriptorFactory.fromResource(R.drawable.icon_marka);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -83,7 +101,7 @@ public class MapType extends AppCompatActivity implements SensorEventListener {
 
         mBaiduMap.setMyLocationEnabled(true);
         //获取传感器服务
-        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        SensorManager mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         mCurrentMode = MyLocationConfiguration.LocationMode.NORMAL;
         mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), SensorManager.SENSOR_DELAY_UI);
 
@@ -101,7 +119,6 @@ public class MapType extends AppCompatActivity implements SensorEventListener {
         // 默认 11级
         float zoom = 11.0f;
 
-        // 该Intent是OfflineDemo中查看离线地图调起的
         Intent intent = getIntent();
         if (null != intent) {
             center = new LatLng(intent.getDoubleExtra("y", latitude),
@@ -114,8 +131,8 @@ public class MapType extends AppCompatActivity implements SensorEventListener {
 
         // 设置地图状态
 //        mBaiduMap.setMapStatus(mapStatusUpdate);
-        heat_map = this.findViewById(R.id.heat_map);
-        road_map = this.findViewById(R.id.road_map);
+        CheckBox heat_map = this.findViewById(R.id.heat_map);
+        CheckBox road_map = this.findViewById(R.id.road_map);
         heat_map.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
@@ -128,34 +145,128 @@ public class MapType extends AppCompatActivity implements SensorEventListener {
                 mBaiduMap.setTrafficEnabled(b);
             }
         });
-        initListenser();
+
+        mPoiList=findViewById(R.id.poi_list);
+        mPoiList.setOnItemClickListener(MapType.this);
+        mPoiInfo=findViewById(R.id.poi_info);
+        //逆地址地理编码的使用,及周边poi的结果
+        Switch poiSwitch = findViewById(R.id.adjenct_poi);
+        poiSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked){
+                    search_initListenser();
+
+                }
+                else{
+                    showNearbyPoiView(false);
+                    initListenser();
+                }
+            }
+        });
 
     }
+        //若搜索附近POI的初始化
+    private void search_initListenser() {
 
-    /**
-     * 对地图事件的消息响应
-     */
-    private void initListenser(){
         mBaiduMap.setOnMapClickListener(new BaiduMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
-                AlertDialog.Builder builder=new AlertDialog.Builder(MapType.this);
+                searchProcess(latLng);
+            }
+
+            @Override
+            public void onMapPoiClick(MapPoi mapPoi) {
+                searchProcess(mapPoi.getPosition());
+            }
+        });
+        mSearch=GeoCoder.newInstance();
+        mSearch.setOnGetGeoCodeResultListener(this);
+    }
+    /**
+     * 搜索点击的POI
+     */
+    public void searchProcess(LatLng ptCenter) {
+        ReverseGeoCodeOption reverseGeoCodeOption=new ReverseGeoCodeOption()
+                .location(ptCenter)
+                .newVersion(1)
+                .pageNum(0)
+                .radius(1000);
+        // 发起反地理编码请求，该方法必须在监听之后执行，否则会在某些场景出现拿不到回调结果的情况
+        mSearch.reverseGeoCode(reverseGeoCodeOption);
+    }
+
+    @Override
+    public void onGetGeoCodeResult(GeoCodeResult geoCodeResult) {
+
+    }
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+    }
+
+    @Override
+    public void onGetReverseGeoCodeResult(ReverseGeoCodeResult result) {
+        if(result==null||result.error!= SearchResult.ERRORNO.NO_ERROR){
+            Toast.makeText(MapType.this,"抱歉，未能找到结果",Toast.LENGTH_LONG).show();
+            return;
+        }
+        mBaiduMap.clear();
+        BitmapDescriptor bitmapDescriptor=BitmapDescriptorFactory.fromResource(R.drawable.icon_marka);
+        //添加poi
+        mBaiduMap.addOverlay(new MarkerOptions().position(result.getLocation()).icon(bitmapDescriptor));
+        //更新地图中心点
+        mBaiduMap.setMapStatus(MapStatusUpdateFactory.newLatLng(result.getLocation()));
+        // 获取周边poi结果
+        List<PoiInfo> poiList = result.getPoiList();
+        if (null != poiList && poiList.size() > 0){
+            PoiListAdapter poiListAdapter = new PoiListAdapter(this, poiList);
+            mPoiList.setAdapter(poiListAdapter);
+            showNearbyPoiView(true);
+        }else {
+            Toast.makeText(MapType.this, "周边没有poi", Toast.LENGTH_LONG).show();
+            showNearbyPoiView(false);
+        }
+
+        Toast.makeText(MapType.this, result.getAddress() , Toast.LENGTH_LONG).show();
+        bitmapDescriptor.recycle();
+    }
+    /**
+     * 展示poi信息 view
+     */
+    private void showNearbyPoiView(boolean whetherShow) {
+        if (whetherShow) {
+            mPoiInfo.setVisibility(View.VISIBLE);
+        } else {
+            mPoiInfo.setVisibility(View.GONE);
+        }
+    }
+
+    /**
+     * 关闭POI搜索按钮时,对地图事件的消息响应
+     */
+    private void initListenser() {
+        mBaiduMap.setOnMapClickListener(new BaiduMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(MapType.this);
                 builder.setIcon(R.drawable.map);
-                builder.setMessage("经度:"+latLng.longitude+",纬度:"+latLng.latitude);
-                builder.setPositiveButton("OK",null);
+                builder.setMessage("经度:" + latLng.longitude + ",纬度:" + latLng.latitude);
+                builder.setPositiveButton("OK", null);
                 builder.show();
             }
 
             @Override
             public void onMapPoiClick(MapPoi mapPoi) {
-                AlertDialog.Builder builder=new AlertDialog.Builder(MapType.this);
+                AlertDialog.Builder builder = new AlertDialog.Builder(MapType.this);
                 builder.setIcon(R.drawable.map);
                 builder.setMessage(mapPoi.getName());
-                builder.setPositiveButton("OK",null);
+                builder.setPositiveButton("OK", null);
                 builder.show();
             }
         });
     }
+
     public void go_current(View view) {
         MapStatus.Builder builder = new MapStatus.Builder();
         float zoom = 18.0f;
@@ -171,7 +282,7 @@ public class MapType extends AppCompatActivity implements SensorEventListener {
         String town = mylocation.getTown();
         String street = mylocation.getStreet();
         String address = mylocation.getAddrStr();
-        message ="当前位置\n"+ country + province + city + district + town + street + "\n" + address;
+        message = "当前位置\n" + country + province + city + district + town + street + "\n" + address;
 
         Toast toast = Toast.makeText(getApplicationContext(), message, 2);
         toast.setGravity(Gravity.CENTER, 0, 0);
@@ -248,6 +359,7 @@ public class MapType extends AppCompatActivity implements SensorEventListener {
         super.onResume();
         // 在activity执行onResume时必须调用mMapView. onResume ()
         mMapView.onResume();
+        showNearbyPoiView(false);
     }
 
     @Override
@@ -262,6 +374,7 @@ public class MapType extends AppCompatActivity implements SensorEventListener {
         super.onDestroy();
         // 在activity执行onDestroy时必须调用mMapView.onDestroy()
         mMapView.onDestroy();
+        mSearch.destroy();
         mBaiduMap.setMyLocationEnabled(false);
         locationClient.stop();
     }
@@ -329,7 +442,7 @@ public class MapType extends AppCompatActivity implements SensorEventListener {
     public void onSensorChanged(SensorEvent sensorEvent) {
         double x = sensorEvent.values[SensorManager.DATA_X];
         if (Math.abs(x - lastX) > 1.0) {
-            mCurrentDirection = (int) x;
+            Integer mCurrentDirection = (int) x;
             MyLocationData myLocationData = new MyLocationData.Builder()
                     .accuracy(radius)
                     .direction(mCurrentDirection)
@@ -344,6 +457,27 @@ public class MapType extends AppCompatActivity implements SensorEventListener {
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
 
+    }
+
+    /**
+     * 调整地图角度为朝向北方
+     */
+    public void adjustAngle(View view) {
+        try{
+            float zoomLevel=mBaiduMap.getMapStatus().zoom;
+            int rotateAngle=0;
+            int overlookAngle=0;
+            MapStatus mapStatus=mBaiduMap.getMapStatus();
+            if(mapStatus!=null){
+                MapStatus build = new MapStatus.Builder(mBaiduMap.getMapStatus()).rotate(rotateAngle).zoom(zoomLevel)
+                        .overlook(overlookAngle).build();
+                MapStatusUpdate mapStatusUpdate = MapStatusUpdateFactory.newMapStatus(build);
+                mBaiduMap.animateMapStatus(mapStatusUpdate);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -376,4 +510,6 @@ public class MapType extends AppCompatActivity implements SensorEventListener {
         mBaiduMap.setMyLocationData(locationData);
         mylocation = location;
     }
+
+
 }
