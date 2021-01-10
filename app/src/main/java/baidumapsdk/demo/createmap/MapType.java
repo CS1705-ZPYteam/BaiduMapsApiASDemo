@@ -374,7 +374,8 @@ public class MapType extends AppCompatActivity implements SensorEventListener, O
         super.onDestroy();
         // 在activity执行onDestroy时必须调用mMapView.onDestroy()
         mMapView.onDestroy();
-        mSearch.destroy();
+        if(mSearch!=null)
+            mSearch.destroy();
         mBaiduMap.setMyLocationEnabled(false);
         locationClient.stop();
     }
